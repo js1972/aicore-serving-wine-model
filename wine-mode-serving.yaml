@@ -33,7 +33,7 @@ spec:
         maxReplicas: 1
         containers:
           - name: kserve-container   # <- required by AI Core validator
-            image: "docker.io/jasonscott150/wine-quality-classifier:v3" # this one uses our own server.py and docker image
+            image: "docker.io/jasonscott150/wine-quality-classifier:v6" # this one uses our own server.py and docker image
             ports:
               - containerPort: 8080
                 protocol: TCP
