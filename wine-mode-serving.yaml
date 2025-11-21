@@ -3,15 +3,42 @@ kind: ServingTemplate
 metadata:
   name: wine-quality-serving
   annotations:
-    scenarios.ai.sap.com/name: "wine-quality"
-    executables.ai.sap.com/name: "wine-quality-serving"
+    scenarios.ai.sap.com/name: "WineQuality"
+    scenarios.ai.sap.com/description: "Serving an MLflow wine classifier."
+    executables.ai.sap.com/name: "wine-serving"
+    executables.ai.sap.com/description: "MLflow container for wine quality prediction"
+  labels:
+    ai.sap.com/version: "1.0"
+
 spec:
+  # No artifact inputs needed for MLflow Docker images
+  inputs:
+    artifacts: []
+    parameters: []
+
   template:
-    spec:
-      containers:
-        - name: wine-server
-          image: jasonscott150/wine-quality-classifier:v2
-          ports:
-            - containerPort: 8080
-          # env, args, resources etc go here
+    apiVersion: "serving.kserve.io/v1beta1"
+    metadata:
+      annotations: |
+        autoscaling.knative.dev/metric: concurrency
+        autoscaling.knative.dev/target: 1
+        autoscaling.knative.dev/targetBurstCapacity: 0
+      labels: |
+        ai.sap.com/resourcePlan: starter
+
+    spec: |
+      predictor:
+        minReplicas: 1
+        maxReplicas: 1
+        containers:
+          - name: mlflow-container
+            image: "docker.io/jasonscott150/wine-quality-classifier:v2"
+            ports:
+              - containerPort: 8080
+                protocol: TCP
+            command: ["/bin/bash", "-c"]
+            args:
+              - >
+                echo "Starting MLflow server" &&
+                mlflow models serve -m /opt/ml/model -p 8080 --host 0.0.0.0
 
