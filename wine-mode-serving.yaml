@@ -1,0 +1,17 @@
+apiVersion: ai.sap.com/v1alpha1
+kind: ServingTemplate
+metadata:
+  name: wine-quality-serving
+  annotations:
+    scenarios.ai.sap.com/name: "wine-quality"
+    executables.ai.sap.com/name: "wine-quality-serving"
+spec:
+  template:
+    spec:
+      containers:
+        - name: wine-server
+          image: jasonscott150/wine-quality-classifier:v2
+          ports:
+            - containerPort: 8080
+          # env, args, resources etc go here
+
