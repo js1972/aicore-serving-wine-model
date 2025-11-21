@@ -1,4 +1,4 @@
-apiVersion: ai.sap.com/v1alpha1
+piVersion: ai.sap.com/v1alpha1
 kind: ServingTemplate
 metadata:
   name: wine-quality-serving
@@ -11,7 +11,6 @@ metadata:
     ai.sap.com/version: "1.0"
 
 spec:
-  # No artifact inputs needed for MLflow Docker images
   inputs:
     artifacts: []
     parameters: []
@@ -25,20 +24,13 @@ spec:
         autoscaling.knative.dev/targetBurstCapacity: 0
       labels: |
         ai.sap.com/resourcePlan: starter
-
     spec: |
       predictor:
         minReplicas: 1
         maxReplicas: 1
         containers:
-          - name: mlflow-container
+          - name: kserve-container          # 👈 required by AI Core
             image: "docker.io/jasonscott150/wine-quality-classifier:v2"
             ports:
               - containerPort: 8080
                 protocol: TCP
-            command: ["/bin/bash", "-c"]
-            args:
-              - >
-                echo "Starting MLflow server" &&
-                mlflow models serve -m /opt/ml/model -p 8080 --host 0.0.0.0
-
