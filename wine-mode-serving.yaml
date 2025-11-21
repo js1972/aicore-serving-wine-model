@@ -1,36 +1,41 @@
-piVersion: ai.sap.com/v1alpha1
+apiVersion: ai.sap.com/v1alpha1
 kind: ServingTemplate
 metadata:
+  # Must be unique inside your AI Core instance
   name: wine-quality-serving
   annotations:
-    scenarios.ai.sap.com/name: "WineQuality"
-    scenarios.ai.sap.com/description: "Serving an MLflow wine classifier."
-    executables.ai.sap.com/name: "wine-serving"
-    executables.ai.sap.com/description: "MLflow container for wine quality prediction"
+    scenarios.ai.sap.com/name: "Wine Quality Classification"
+    scenarios.ai.sap.com/description: "XGBoost wine quality classifier via MLflow REST container"
+    executables.ai.sap.com/name: "wine-quality-server"
+    executables.ai.sap.com/description: "Serve wine quality classifier from Docker image"
   labels:
+    scenarios.ai.sap.com/id: "wine-quality"
     ai.sap.com/version: "1.0"
 
 spec:
-  inputs:
-    artifacts: []
-    parameters: []
-
+  # No artifacts/parameters – model is baked into the image
   template:
     apiVersion: "serving.kserve.io/v1beta1"
     metadata:
       annotations: |
         autoscaling.knative.dev/metric: concurrency
-        autoscaling.knative.dev/target: 1
-        autoscaling.knative.dev/targetBurstCapacity: 0
+        autoscaling.knative.dev/target: "1"
+        autoscaling.knative.dev/targetBurstCapacity: "0"
       labels: |
         ai.sap.com/resourcePlan: starter
     spec: |
       predictor:
+        # For a **public** Docker Hub image you can drop imagePullSecrets completely.
+        # If you *do* use a secret, make sure the name matches exactly.
+        # imagePullSecrets:
+        #   - name: dockerhub-cred
         minReplicas: 1
         maxReplicas: 1
         containers:
-          - name: kserve-container          # 👈 required by AI Core
+          - name: kserve-container   # <- required by AI Core validator
             image: "docker.io/jasonscott150/wine-quality-classifier:v2"
             ports:
               - containerPort: 8080
                 protocol: TCP
+            # Our Dockerfile already sets CMD to run `mlflow models serve` on 8080,
+            # so we don't need any extra args/env here.
